@@ -10,13 +10,35 @@ class SlackAuthenticator < ::Auth::OAuth2Authenticator
     'slack'
   end
 
-  # def after_authenticate(auth_token)
-  #   result = Auth::Result.new
+  def after_authenticate(auth_token)
+    result = Auth::Result.new
 
-  #   result.email = email = auth_token[:info][:email],
-  #   result.name = auth_token[:name]
-  #   result
-  # end
+    data = auth_token[:info]
+    raw_info = auth_token["extra"]["raw_info"]
+
+    email = data["email"],
+    name = data["email"]
+    username = data["nickname"]
+    sk_uid = auth_token["uid"]
+
+    current_info = ::PluginStore.get("sk", "sk_uid_#{sk_uid}")
+
+    result.user =
+      if current_info
+        User.where(id: current_info[:user_id]).first
+      end
+
+    result.name = name
+    resutl.extra_data = { sk_uid: sk_uid }
+    result.email = email
+
+    result
+  end
+
+  def after_create_account(user, auth)
+    data = auth[:extra_data]
+    ::PluginStore.set("sk", "sk_uid_#{data[:sk_uid]}", {user_id: user.id})
+  end
 
   def register_middleware(omniauth)
     omniauth.provider :slack, CLIENT_ID, CLIENT_SECRET
