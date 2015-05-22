@@ -13,7 +13,7 @@ class SlackAuthenticator < ::Auth::OAuth2Authenticator
   def after_authenticate(auth_token)
     result = Auth::Result.new
 
-    # Grap the info we need from OmniAuth
+    # Grab the info we need from OmniAuth
     data = auth_token[:info]
     raw_info = auth_token["extra"]["raw_info"]
 
@@ -30,7 +30,7 @@ class SlackAuthenticator < ::Auth::OAuth2Authenticator
       end
 
     result.name = name
-    resutl.extra_data = { sk_uid: sk_uid }
+    result.extra_data = { sk_uid: sk_uid }
     result.email = email
 
     result
