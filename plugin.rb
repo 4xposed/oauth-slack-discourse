@@ -6,39 +6,49 @@ class SlackAuthenticator < ::Auth::OAuth2Authenticator
   CLIENT_ID = ENV['SLACK_CLIENT_ID']
   CLIENT_SECRET = ENV['SLACK_CLIENT_SECRET']
 
-  # Work In Progress
-  # commented code is buggy
+  def name
+    'slack'
+  end
 
+  def after_authenticate(auth_token)
+    result = Auth::Result.new
 
-  # def name
-  #   'slack'
-  # end
+    # Grab the info we need from OmniAuth
+    data = auth_token[:info]
 
-  # def after_authenticate(auth_token)
-  #   result = Auth::Result.new
-  #   # Grab the info we need from OmniAuth
-  #   data = auth_token[:info]
-  #   raw_info = auth_token["extra"]["raw_info"]
-  #   email = data[:email],
-  #   name = data[:name]
-  #   username = data[:nickname]
-  #   sk_uid = auth_token[:uid]
-  #   current_info = ::PluginStore.get("sk", "sk_uid_#{sk_uid}")
-  #   result.user =
-  #     if current_info
-  #       User.where(id: current_info[:user_id]).first
-  #     end
-  #   result.name = name
-  #   result.username = username
-  #   result.extra_data = { sk_uid: sk_uid }
-  #   result.email = email
-  #   result
-  # end
+    provider = auth_token[:provider]
+    slack_uid = auth_token["uid"]
 
-  # def after_create_account(user, auth)
-  #   data = auth[:extra_data]
-  #   ::PluginStore.set("sk", "sk_uid_#{data[:sk_uid]}", {user_id: user.id})
-  # end
+    result.name = data[:name]
+    result.username = data[:nickname]
+    result.email = data[:email]
+
+    result.email_valid = true
+    result.extra_data = { uid: slack_uid, provider: provider }
+
+    current_info = ::PluginStore.get("slack", "slack_uid_#{slack_uid}")
+
+    if User.find_by_email(data[:email]).nil?
+      user = User.create(name: data[:name], email: data[:email], username: data[:nickname], approved: true)
+      ::PluginStore.set("slack", "slack_uid_#{slack_uid}",{user_id: user.id})
+    end
+
+    result.user =
+        if current_info
+          User.where(id: current_info[:user_id]).first
+        elsif user = User.where(username: result.username).first
+          user
+        end
+    result.user ||= User.where(email: data[:email]).first
+
+    result
+  end
+
+  def after_create_account(user, auth)
+    data = auth[:extra_data]
+    user.update_attribute(:approved, true)
+    ::PluginStore.set("slack", "slack_uid_#{data[:uid]}", {user_id: user.id})
+  end
 
   def register_middleware(omniauth)
     omniauth.provider :slack, CLIENT_ID, CLIENT_SECRET
@@ -65,9 +75,9 @@ class OmniAuth::Strategies::Slack < OmniAuth::Strategies::OAuth2
 
   info do
     {
-      nickname: user_info['user']['name'],
       name: user_info['user']['profile']['real_name_normalized'],
-      email: user_info['user']['profile']['email']
+      email: user_info['user']['profile']['email'],
+      nickname: user_info['user']['name']
     }
   end
 
