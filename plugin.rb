@@ -5,6 +5,7 @@ class SlackAuthenticator < ::Auth::OAuth2Authenticator
 
   CLIENT_ID = ENV['SLACK_CLIENT_ID']
   CLIENT_SECRET = ENV['SLACK_CLIENT_SECRET']
+  TEAM_ID = ENV['SLACK_TEAM_ID']
 
   def name
     'slack'
@@ -51,7 +52,11 @@ class SlackAuthenticator < ::Auth::OAuth2Authenticator
   end
 
   def register_middleware(omniauth)
-    omniauth.provider :slack, CLIENT_ID, CLIENT_SECRET
+    unless TEAM_ID.nil?
+     omniauth.provider :slack, CLIENT_ID, CLIENT_SECRET, scope: 'identify, read', team: TEAM_ID
+    else
+     omniauth.provider :slack, CLIENT_ID, CLIENT_SECRET, scope: 'identify, read'
+    end
   end
 end
 
