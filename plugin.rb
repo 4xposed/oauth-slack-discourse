@@ -1,4 +1,4 @@
-# name: Slack Oauht2 Discourse
+# name: Slack Oauth2 Discourse
 # about: This plugin allows your users to sign up/in using their Slack account.
 # version: 0.3
 # authors: Daniel Climent
