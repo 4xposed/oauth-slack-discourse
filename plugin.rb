@@ -105,7 +105,7 @@ class OmniAuth::Strategies::Slack < OmniAuth::Strategies::OAuth2
   end
 end
 
-auth_provider title: 'Sign up using Slack',
+auth_provider title: 'with Slack',
     message: 'Log in using your Slack account. (Make sure your popup blocker is disabled.)',
     frame_width: 920,
     frame_height: 800,
