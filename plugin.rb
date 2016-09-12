@@ -114,7 +114,7 @@ auth_provider title: 'with Slack',
 register_css <<CSS
 
   .btn-social.slack {
-    background: #08c;
+    background: #ab9ba9;
     text-indent: 19px;
   }
 
