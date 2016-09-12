@@ -119,7 +119,7 @@ register_css <<CSS
   }
 
   .btn-social.slack:before {
-    content: "\xf198";
+    content: "";
   }
 
 CSS
